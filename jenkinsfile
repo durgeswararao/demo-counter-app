@@ -7,10 +7,13 @@ pipeline{
                 git branch: 'main', url: 'https://github.com/durgeswararao/demo-counter-app.git'
             }
         }
-        stage('UNIT Test'){
-        withMaven(maven: 'mvn') {
+        stage('UNIT Testing'){
+            steps{
+                 withMaven(maven: 'mvn') {
             sh "mvn test"
         }
+            }
+       
     }
         
     }
