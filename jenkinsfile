@@ -31,6 +31,46 @@ pipeline{
             sh 'mvn clean install'
         }
     }
+    stage('SonarQube analysis'){
+        steps{
+            script{
+                withSonarQubeEnv(credentialsId: 'sonar-api'){
+                    sh 'mvn clean package sonar:sonar'
+                }
+            }
+        }
+    }
+    stage('Quality Gate status'){
+        steps{
+            script{
+                waitForQualityGate abortPipeline: false, credentialsId: 'sonar-api'
+            }
+        }
+    }
+    stage('Upload war file to nexus'){
+        steps{
+            script{
+                def readPomVersion = readMavenPom file: 'pom.xml'
+                def nexusRepo = readMavenPom.version.endsWith("SNAPSHOT") ? "" : "demoapp-release"
+                nexusArtifactUploader artifacts:
+                [
+                    [
+                        artifactId: 'springboot',
+                        classifier: '',
+                        file: 'target/Uber.jar',
+                        type: 'jar'
+                    ]
+                ],
+                credentialsId: 'nexus-auth',
+                groupId: 'com.example',
+                nexusUrl: '3.226.244.16:8081',
+                protocol: 'http',
+                repository: 'demoapp-release',
+                //version: '1.0.0'
+                version: "${readPomVersion.version}"
+            }
+        }
+    }
         
     }
 }
