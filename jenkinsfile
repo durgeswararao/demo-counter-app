@@ -44,7 +44,7 @@ pipeline{
         steps{
             script{
                 def readPomVersion = readMavenPom file: 'pom.xml'
-                def nexusRepo = readPomVersion.version.endsWith("SNAPSHOT") ? "" : "demoapp-release"
+                def nexusRepo = readPomVersion.version.endsWith("SNAPSHOT") ? "demoapp-snapshot" : "demoapp-release"
                 nexusArtifactUploader artifacts:
                 [
                     [
@@ -62,6 +62,14 @@ pipeline{
                 //version: '1.0.0'
                 version: "${readPomVersion.version}"
             }
+        }
+    }
+    stage('Docker image build'){
+        steps{
+            script{
+                sh 'docker image build -t $JOB_NAME:v1.$BUILD_ID .'
+                sh 'docker image tag $JOB_NAME:v1.$BUILD_ID durgeswararao/$JOB_NAME:v1.$BUILD_ID'
+                sh 'docker image tag $JOB_NAME:v1.$BUILD_ID durgeswararao/JOB_NAME:latest'           }
         }
     }
         
